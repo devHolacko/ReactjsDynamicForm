@@ -1,0 +1,101 @@
+{
+  "InputGroups":[
+    {
+      "name":"config page 1",
+      "subtitle":"config page subtitle",
+      "elements":[
+        {
+          "id":"my_first_slider",
+          "type":"slider",
+          "min":0,
+          "max":100,
+          "default":0,
+          "label":"my slider",
+          "description":"slider description",
+          "unit":"unit value",
+          "valueId":null
+        },
+        {
+          "id":"my_first_text",
+          "type":"input",
+          "min":0,
+          "max":100,
+          "default":"welcome theres five hundredsdsadas",
+          "label":"my input",
+          "description":"input description",
+          "unit":"unit value",
+          "valueId":null
+        },
+        {
+          "id":"my_second_text",
+          "type":"output",
+          "min":0,
+          "max":100,
+          "default":10,
+          "label":"my second input",
+          "description":"my second input description",
+          "unit":"unit value",
+          "valueId":"my_first_text"
+        }
+      ]
+    },
+    {
+      "name":"config page 2",
+      "subtitle":"config page subtitle 2",
+      "elements":
+      [
+        {
+          "id": "my_first_slider1",
+          "type": "slider",
+          "min": 0,
+          "max": 100,
+          "default": 100,
+          "label": "my slider1",
+          "description": "slider description1",
+          "unit": "unit value",
+          "valueId": null
+        },
+        {
+          "id":"my_second_slider1",
+          "type":"slider",
+          "min":0,
+          "max":100,
+          "default":0,
+          "label":"my second slider",
+          "description":"slider description1",
+          "unit":"unit value",
+          "valueId":null
+        },
+        {
+          "id":"my_first_text1",
+          "type":"input",
+          "min":0,
+          "max":100,
+          "default":"welcome there1dsadfad daad",
+          "label":"my input1",
+          "description":"input description1",
+          "unit":"unit value",
+          "valueId":null
+        },
+        {
+          "id":"my_second_text1",
+          "type":"output",
+          "min":0,
+          "max":100,
+          "default":10,
+          "label":"my second input1",
+          "description":"my second input description1",
+          "unit":"unit value",
+          "valueId":"my_first_text1"
+        }
+      ]
+    }
+  ],
+  "Calculations":
+  [
+    {
+      "id":"my_first_calculation",
+      "equation":"my_first_slider * my_first_slider1"
+    }
+  ]
+}
