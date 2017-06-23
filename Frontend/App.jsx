@@ -115,14 +115,14 @@ class App extends React.Component {
 		var backStep = currentStep - 1;
 
 		var inputGroups = handler.getRequestResult().inputGroups;
-		for(var i = 0; i < inputGroups.length; i++){
+		inputGroups.forEach(function(item,i) {
 			if(currentStep == i+1){
-				var stepElementsToRender  = inputGroups[i].elements;
+				var stepElementsToRender  = item.elements;
 				for(var j = 0; j < stepElementsToRender.length;j++){
 					return this.createItem(stepElementsToRender[j]);
 				}
 			}
-		}
+		});
 	}
 	
 	setStateHandler (){
@@ -152,7 +152,6 @@ class App extends React.Component {
 		var self = this;
 		axios.get('http://localhost:9415/api/Controls')
       .then( (response) => {
-		  console.log("response",response);
 		self.state.handler.setRequestResult(response.data);
 		self.state.requestResult = response.data;
 

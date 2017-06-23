@@ -107,7 +107,7 @@ export default class ControlHandler{
 
     updateOutputs(){
         var stepIndex = this.state.stepIndex;
-        console.log(this.getRequestResult());
+        
         var currentStep = this.getRequestResult().inputGroups[stepIndex].elements;
         
         currentStep.forEach(function(item,index) {
