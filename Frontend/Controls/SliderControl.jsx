@@ -11,14 +11,26 @@ export default class SliderControl extends React.Component{
   constructor(props){
     super(props);
     this.state={
-      controlValue : this.props.controlDefault
+      controlValue : this.props.controlDefault,
+      style:{
+        "float":"right"
+      },
+      sliderValuesDiv:{
+        width:500
+      }
     }
   }
 
   render(){
     return(
-      <div>
-          <OutputField label={this.props.controlLabel} />
+      <div style={this.state.sliderValuesDiv}>
+          <OutputField controlId={Math.random()} type="label" label={this.props.controlLabel} />
+          <br/>
+          <br/>
+          <div style={this.state.sliderValuesDiv}>
+              <OutputField controlId={Math.random()} type="label" label={this.props.controlMin} />
+              <OutputField controlId={Math.random()} type="label" className="align-right margin-bottom" label={this.props.controlMax} />
+            </div>
           <MuiThemeProvider>
             <Slider
               key={this.props.controlId}
@@ -29,7 +41,7 @@ export default class SliderControl extends React.Component{
               
               value={this.props.controlDefault}
               onChange={this.props.handleSliderOnChange.bind(null,this.props.controlId)} />
-
+              
           </MuiThemeProvider>
       </div>
           );

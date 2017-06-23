@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using LintsProject.Backend.Model;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -13,28 +14,38 @@ namespace LintsProject.Backend.Controllers
         {
             _env = env;
         }
-        // GET: api/values
+
         [HttpGet]
         public RootObject Get()
         {
             var webRoot = _env.ContentRootPath;
             var file = System.IO.Path.Combine(webRoot, @"Json\elements.json");
-            //deserialize JSON from file  
             var json = System.IO.File.ReadAllText(file);
             var elements = JsonConvert.DeserializeObject<RootObject>(json);
             
             return elements;
         }
 
-        // POST api/values
         [HttpPost]
-        public void Post([FromBody]RootObject jsonElements)
+        public void Post([FromBody]dynamic items)
         {
-            var jsonString = JsonConvert.SerializeObject(jsonElements);
-            //var jsonObject = JsonConvert.DeserializeObject<RootObject>(jsonString);
+            var jsonString = JsonConvert.SerializeObject(items);
+            var item = new ResultLog {CreatedOn = DateTime.Now, Data = jsonString};
             var webRoot = _env.ContentRootPath;
-            var file = System.IO.Path.Combine(webRoot, @"Json\elements.json");
-            System.IO.File.WriteAllText(file, jsonString);
+            var file = System.IO.Path.Combine(webRoot, @"Json\results.json");
+
+            var json = System.IO.File.ReadAllText(file);
+            
+
+            List<ResultLog> lstExistingItems = string.IsNullOrEmpty(json)
+                ? new List<ResultLog>()
+                : (List<ResultLog>)JsonConvert.DeserializeObject(json, typeof(List<ResultLog>));
+
+            lstExistingItems.Add(item);
+
+            var lstJsonItems = JsonConvert.SerializeObject(lstExistingItems);
+
+            System.IO.File.WriteAllText(file,lstJsonItems);
         }
     }
 }

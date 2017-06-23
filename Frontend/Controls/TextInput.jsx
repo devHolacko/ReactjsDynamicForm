@@ -11,25 +11,16 @@ export default class TextInput extends React.Component {
 			}
 		}
 
-	// handleOnChange(e){
-	// 	this.setState({
-	// 		controlValue : e.target.value
-	// 	})
-	// }
-
 	render(){
 		return(
 			<MuiThemeProvider>
-				{/*<label> {this.props.controlLabel} </label>
-				<input type="text" value={this.props.controlDefault} id={this.props.controlId} 
-				min={this.props.controlMin} max={this.props.controlMax}
-				 />*/}
 				 <TextField
 				 key={this.props.controlId}
 				 id={this.props.controlId}
 				 floatingLabelText={this.props.controlLabel} 
 				 defaultValue={this.props.controlDefault}
 				 value={this.state.controlValue}
+				 style={this.props.style}
 				 onChange={this.props.handleOnChange} />
 			</MuiThemeProvider>
 		);

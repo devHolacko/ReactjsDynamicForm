@@ -15,7 +15,7 @@ class App extends React.Component {
 
 		this.state = {
 		arrDivItems : [],
-		requestResult : null, // this.getInputGroup(),
+		requestResult : null,
 		isDataReturned : false,
 		handler : new ControlHandler(this.getInputGroup()),
 		step : 0,
@@ -37,59 +37,87 @@ class App extends React.Component {
 				"padding-top":"30px",
 				width:"70%"
 			}
-		}
+	}
 
 
 		this.setStateHandler = this.setStateHandler.bind(this);
 
-		//this.state.handler.setRequestResult(this.state.requestResult);
+		
 		this.getInputs();
 	}
 
+	getHandler(){
+		return this.state.handler;
+	}
+
 	nextStep(){
-		if(this.state.nextText == "Submit"){
+		var handler = this.getHandler();
+		var state = this.state;
+		var currentStep = state.step;
+		var nextStep = currentStep + 1;
+
+		if(state.nextText == "Submit"){
 			this.postInputs();
 			alert("Submit");
 		}else{
-			if(this.state.step + 1 < this.state.handler.getRequestResult().inputGroups.length -1)
+			var inputGroups = handler.getRequestResult().inputGroups;
+
+			if(nextStep < inputGroups.length -1)
 			{
+				handler.updateStepIndex(this.state.step + 1);
+
 				this.setState({
-				step: this.state.step+1 ,
-				showBack : (this.state.step + 1 > 0 && this.state.step + 1 < this.state.handler.getRequestResult().inputGroups.length) ? true : false,
-				nextText : "Next" 
+					step: nextStep ,
+					showBack : (nextStep > 0 && nextStep < inputGroups.length) ? true : false,
+					nextText : "Next" 
 				});
 			}
-			else if(this.state.step + 1 == this.state.handler.getRequestResult().inputGroups.length-1){
+			else if(nextStep == inputGroups.length-1){
+				handler.updateStepIndex(this.state.step + 1);
 				this.setState({
-				step: this.state.step+1 ,
-				showBack : (this.state.step + 1 > 0 && this.state.step + 1 < this.state.handler.getRequestResult().inputGroups.length) ? true : false,
-				nextText : "Submit" 
+					step: nextStep ,
+					showBack : (nextStep > 0 && nextStep < inputGroups.length) ? true : false,
+					nextText : "Submit" 
 				});
 			}
 			else{
 				this.setState({
-				nextText : "Submit" 
+					nextText : "Submit" 
 				});
 			}
 		}
 	}
 
 	backStep(){
-		if(this.state.step - 1 >= 0)
+		var handler = this.getHandler();
+		var inputGroups = handler.getRequestResult().inputGroups;
+		var state = this.state;
+		var currentStep = state.step;
+		var nextStep = currentStep + 1;
+		var backStep = currentStep - 1;
+		if(backStep >= 0)
 		{
+			handler.updateStepIndex(backStep);
 			this.setState({
-			step: this.state.step-1 ,
-			showBack : (this.state.step + 1 > 0 && this.state.step + 1 < this.state.handler.getRequestResult().inputGroups.length) ? true : false,
-			nextText : "Next" 
+				step: backStep ,
+				showBack : (nextStep > 0 && nextStep < inputGroups.length) ? true : false,
+				nextText : "Next" 
 			});
 		}
 	}
 
 	showStep(){
-		var requestResult = this.state.handler.getRequestResult();
-		for(var i = 0; i < requestResult.InputGroups.length; i++){
-			if(this.state.step == i+1){
-				var stepElementsToRender  = requestResult.InputGroups[i].elements;
+		var handler = this.getHandler();
+		var inputGroups = handler.inputGroups;
+		var state = this.state;
+		var currentStep = state.step;
+		var nextStep = currentStep + 1;
+		var backStep = currentStep - 1;
+
+		var inputGroups = handler.getRequestResult().inputGroups;
+		for(var i = 0; i < inputGroups.length; i++){
+			if(currentStep == i+1){
+				var stepElementsToRender  = inputGroups[i].elements;
 				for(var j = 0; j < stepElementsToRender.length;j++){
 					return this.createItem(stepElementsToRender[j]);
 				}
@@ -124,33 +152,33 @@ class App extends React.Component {
 		var self = this;
 		axios.get('http://localhost:9415/api/Controls')
       .then( (response) => {
+		  console.log("response",response);
 		self.state.handler.setRequestResult(response.data);
+		self.state.requestResult = response.data;
 
 		this.setState({
 			isDataReturned : true
 		})
-        // this.setState({
-        //   fetchUser: response.data
-        // });
-        // console.log("fetchUser", this.state.fetchUser);
       })
       .catch( (error) => {
-        console.log(error);
+        
       });  
 	}
 
 	postInputs(){
 		var self = this;
-		var data = self.state.handler.getRequestResult();
-		console.log(data);
-		 axios.post('http://localhost:9415/api/Controls', data)
+		var data = self.state.handler.getItemsToPost();
+		var items ={
+			items:data
+		}
+		
+
+		 axios.post('http://localhost:9415/api/Controls', items)
 
             .then((response) => {
-                //dispatch({type: FOUND_USER, data: response.data[0]})
-				console.log(response);
             })
             .catch((error) => {
-				console.log(error);
+				
             })
 	}
 
@@ -169,10 +197,10 @@ class App extends React.Component {
 
 	render(){
 		if(this.state.isDataReturned){
+			var handler = this.state.handler;
+		var itemsToRender = handler.getRequestResult().inputGroups[this.state.step];
 		
-		var itemsToRender = this.state.handler.getRequestResult().inputGroups[this.state.step]; // TO DO : 0 should be replace with current step index
-
-		var data = this.state.handler.renderStep(itemsToRender).arrInputs;
+		var data = handler.renderStep(itemsToRender).arrInputs;
 		var self = this;
 		
 		return (
@@ -202,8 +230,7 @@ class App extends React.Component {
 								{this.state.nextText == "Next" ? <Next /> : <Done />}
 							</FloatingActionButton>
 						</MuiThemeProvider>
-						{/*{this.state.showBack ? <button onClick={this.handleBackClick.bind(self)} >back</button> : null}
-						<button onClick={this.handleClick.bind(self)} >{this.state.nextText}</button>*/}
+						
 					</div>
 				</div>
 			</Paper>

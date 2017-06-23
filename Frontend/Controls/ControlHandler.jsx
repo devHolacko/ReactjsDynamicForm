@@ -14,21 +14,29 @@ export default class ControlHandler{
             maxStepIndex : 0,
             requestResult : null,
             getNumericInputs : this.getElementsWithNumericValues.bind(this),
-            getEquations : this.getResultEquations.bind(this)
+            getEquations : this.getResultEquations.bind(this),
+            sliderValue : -1,
+            sliderValuesDiv:{
+                width:500
+            }
         }
     }
 
+    updateStepIndex(newStep){
+        this.state.stepIndex = newStep;
+    }
+
     getResultEquations(){
-        var equations = {
-        }
+        var equations = [];
 
         var arrCalculations = this.state.requestResult.calculations;
 
-        for (var index = 0; index < arrCalculations.length; index++) {
-            var element = arrCalculations[index];
-            equations[element.id] = element.id;
-            equations[element.equation] = element.equation;
-        }
+        arrCalculations.forEach(function(element,index){
+            var item = {};
+            item.id = element.id;
+            item.calculation = element.equation;
+            equations.push(item);
+        });
 
         return equations;
     }
@@ -39,15 +47,15 @@ export default class ControlHandler{
         }
         var inputGroups = this.state.requestResult.inputGroups;
 
-        for (var index = 0; index < inputGroups.length; index++) {
-            var elements = inputGroups[index].elements;
-            for (var j = 0; j < elements.length; j++) {
+        inputGroups.forEach(function(item,index){
+            var elements = item.elements;
+            elements.forEach(function(el,j){
                 var element = elements[j];
                 if(!isNaN(parseFloat(element.default)) && isFinite(element.default)){
                     scope[element.id] = element.default;
                 }
-            }
-        }
+            });
+        });
 
         return scope;   
     }
@@ -58,15 +66,19 @@ export default class ControlHandler{
         }
         var inputGroups = this.state.requestResult.inputGroups;
 
-        for (var index = 0; index < inputGroups.length; index++) {
-            var elements = inputGroups[index].elements;
-            for (var j = 0; j < elements.length; j++) {
-                var element = elements[j];
+        inputGroups.forEach(function(item,index){
+            var elements = item.elements;
+            elements.forEach(function(subItem,j){
+                var element = subItem
                 scope[element.id] = element.default;
-            }
-        }
+            });
+        });
 
         return scope;   
+    }
+
+    getSliderValue(){
+        return this.state.sliderValue;
     }
 
     handleTextInputOnChange(event){
@@ -86,26 +98,73 @@ export default class ControlHandler{
         
         var requestResult = this.state.requestResult;
 
+        this.state.sliderValue = sliderValue;
+
+        document.getElementById(id+"_label").innerHTML = sliderValue;
         
         this.updateControlValue(elementId,sliderValue);
     }
 
-    updateControlValue(id,value){
-        var requestResult = this.state.requestResult;
-        for(var i = 0;i < requestResult.inputGroups.length;i++){
-            var elements = requestResult.inputGroups[i].elements;
-            
-            for(var j = 0;j < elements.length;j++ ){
-                var itemId = elements[j].id;
-                if(id == itemId){
-                    elements[j].default = value;
+    updateOutputs(){
+        var stepIndex = this.state.stepIndex;
+        console.log(this.getRequestResult());
+        var currentStep = this.getRequestResult().inputGroups[stepIndex].elements;
+        
+        currentStep.forEach(function(item,index) {
+            if(item.type == "output" && item.valueId != null){
+                var valueId = item.valueId;
+                var numericInputs = this.state.getNumericInputs();
+                var arrEquations = this.state.getEquations();
+                var arrElements = this.getAllElements();
+
+                var isEquation = false;
+                arrEquations.forEach(function(item,index){
+                    if(item.id == valueId){
+                        isEquation = true;
+                    }
+                });
+               if(numericInputs[valueId] != null){
+                    var itemValue = numericInputs[valueId];
+                    document.getElementById(item.id).value = itemValue;
+                }
+                else if(isEquation){
+                    var itemValue = {};
+                    arrEquations.find(function(e){
+                        if(e.id == valueId){
+                            itemValue[e.id] = e.calculation;
+                        }
+                    });
+                    var result = this.evaluateEquation(itemValue);
+                    document.getElementById(item.id).innerHTML = result;
+                }
+                else{
+                    var itemValue = arrElements[valueId];
+                    document.getElementById(item.id).innerHTML = itemValue;
                 }
             }
+        }, this);
+    }
 
-            requestResult.inputGroups[i].elements = elements;
-        }
+    updateControlValue(id,value){
+        var requestResult = this.state.requestResult.inputGroups;
+        
+        requestResult.forEach(function(item,i){
+            var elements = item.elements;
+            
+            elements.forEach(function(subItem,j){
+                var itemId = subItem.id;
+                if(id == itemId){
+                    subItem.default = value;
+                }
+            });
 
-        this.state.requestResult = requestResult;
+            requestResult[i].elements = elements;
+        });
+
+        this.state.requestResult.inputGroups = requestResult;
+
+        this.updateOutputs();
+        
     }
 
     setRequestResult(result){
@@ -117,7 +176,7 @@ export default class ControlHandler{
         return this.state.requestResult;
     }
     initSteps(){
-        console.log("RequestResult inputGroups Length",this.state.requestResult.inputGroups);
+        
         if(this.state.requestResult != null){
             this.state.maxStepIndex = this.state.requestResult.inputGroups.length;
         }
@@ -137,24 +196,60 @@ export default class ControlHandler{
         }
     }
 
-    evaluateEquation(equation){
-        
+    getItemsToPost(){
         var arrElements = [];
+        var arrEquationIds = [];
+        var scope = this.state.getNumericInputs();
+        var equations = this.state.getEquations();
+        var self = this;
+
+        equations.forEach(function(eq,eIndex){
+            var arrItemToAdd = [];
+            var equationId = eq.id;
+            var equationValue = eq.calculation;
+            var scopeKeys = Object.keys(scope);
+
+            scopeKeys.forEach(function(item,index){
+                
+                var key = scopeKeys[index];
+                
+                if(equationValue.includes(key)){
+                    var itemToAdd = {};
+                    itemToAdd[key] = scope[key];
+                    
+                    arrItemToAdd.push(itemToAdd);
+                    
+                }
+            });
+            
+            
+            var itemToAdd = {};
+            itemToAdd[equationId] = math.eval(equationValue,scope);
+            arrItemToAdd.push(itemToAdd);
+
+            arrEquationIds.push(arrItemToAdd);
+        });
+
+        return arrEquationIds;
+
+    }
+
+    evaluateEquation(equation){
+        var equationId = Object.keys(equation)[0]
+        var equationValue = equation[equationId];
         
         
         var scope = this.state.getNumericInputs();
-
-
-        return math.eval(equation,scope);
+        
+        var result = math.eval(equationValue,scope);
+        return result;
     }
 
     renderStep(stepInputGroup){
         var name = stepInputGroup.name;
         var subtitle = stepInputGroup.subtitle;
         var elements = stepInputGroup.elements;
-
-        //this.evaluateEquation("my_second_text * my_second_text");
-
+        
         var arrInputs = [];
 
         var self = this;
@@ -176,13 +271,25 @@ export default class ControlHandler{
                 var arrEquations = this.state.getEquations();
                 var arrElements = this.getAllElements();
 
+                var isEquation = false;
+                arrEquations.forEach(function(item,index){
+                    if(item.id == valueId){
+                        isEquation = true;
+                    }
+                });
+
                 if(numericInputs[valueId] != null){
                     var itemValue = numericInputs[valueId];
                     arrInputs.push(self.renderOutput({id:item.id,label : itemValue,type:"label"}));
                     break;
                 }
-                else if(arrEquations[valueId] != null){
-                    var itemValue = arrEquations[valueId];
+                else if(isEquation){
+                    var itemValue = {};
+                    arrEquations.find(function(e){
+                        if(e.id == valueId){
+                            itemValue[e.id] = e.calculation;
+                        }
+                    });
                     var result = this.evaluateEquation(itemValue);
                     arrInputs.push(self.renderOutput({id:item.id,label : result,type:"label"}));
                 }
@@ -210,15 +317,22 @@ export default class ControlHandler{
 
     renderSlider(values){
         return(
-            <SliderControl
-                controlId={values.id}
-                controlMin={values.min}
-                controlMax={values.max}
-                controlDefault={values.default}
-                controlValue={values.default}
-                handleSliderOnChange = {this.state.sliderOnChange.bind(this)}
-                controlLabel={values.label}
-             />
+            <div>
+                <br/>
+                <br/>
+                <SliderControl
+                    controlId={values.id}
+                    controlMin={values.min}
+                    controlMax={values.max}
+                    controlDefault={values.default}
+                    controlValue={values.default}
+                    handleSliderOnChange = {this.state.sliderOnChange.bind(this)}
+                    controlLabel={values.label}
+                />
+                <div style={this.state.sliderValuesDiv}>
+                    <OutputField className="align-right" controlId={values.id+"_label"} type="label" label={values.default}/>
+                </div>
+             </div>
         );
     }
 

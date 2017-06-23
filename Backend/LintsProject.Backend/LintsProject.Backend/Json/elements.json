@@ -78,24 +78,27 @@
           "valueId":null
         },
         {
-          "id":"my_second_text1",
-          "type":"output",
-          "min":0,
-          "max":100,
-          "default":10,
-          "label":"my second input1",
-          "description":"my second input description1",
-          "unit":"unit value",
-          "valueId":"my_first_text1"
+          "id": "my_second_text1",
+          "type": "output",
+          "min": 0,
+          "max": 100,
+          "default": 10,
+          "label": "my second input1",
+          "description": "my second input description1",
+          "unit": "unit value",
+          "valueId": "my_first_calculation"
         }
       ]
     }
   ],
-  "Calculations":
-  [
+  "Calculations": [
     {
-      "id":"my_first_calculation",
-      "equation":"my_first_slider * my_first_slider1"
+      "id": "my_first_calculation",
+      "equation": "my_first_slider * my_first_slider1"
+    },
+    {
+      "id": "my_second_calculation",
+      "equation": "my_first_slider * my_first_slider1"
     }
   ]
 }
